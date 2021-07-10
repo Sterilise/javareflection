@@ -62,7 +62,7 @@ public class MetaModel{
         List<String> columnNames = getColumns().stream().map(ColumnField::getName).collect(Collectors.toList());
 
 
-        List<String> allNames = List.copyOf(columnNames);
+        List<String> allNames = columnNames;
         allNames.add(0, primaryKeyColumnName);
         //join elements in list using , as a separator
         String tableFieldsPart = String.join(", ", allNames);

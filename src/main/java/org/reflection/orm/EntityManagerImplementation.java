@@ -46,7 +46,11 @@ public class EntityManagerImplementation<T> implements EntityManager<T> {
 
             //primary key (id)
             if(primaryKeyType == long.class){
-                statement.setLong(1, idGenerator.incrementAndGet());
+                long id = idGenerator.incrementAndGet();
+                statement.setLong(1, id);
+                Field primaryKeyField = metamodel.getPrimaryKey().getField();
+                primaryKeyField.setAccessible(true);
+                primaryKeyField.set(t, id);
             }
 
             //columns

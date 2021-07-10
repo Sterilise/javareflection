@@ -16,5 +16,11 @@ public class WritingObjects {
         entityManager.persist(james);
         entityManager.persist(susan);
         entityManager.persist(john);
+        System.out.println("Writing to database");
+        System.out.println(linda);
+        System.out.println(james);
+        System.out.println(susan);
+        System.out.println(john);
+        System.out.println("added linda,james, susan and john to the database");
     }
 }
