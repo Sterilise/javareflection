@@ -18,6 +18,10 @@ public class GeneralField {
         return this.field.getType().getSimpleName();
     }
 
+    public Class<?> getType(){
+        return this.field.getType();
+    }
+
     public Field getField() {
         return field;
     }

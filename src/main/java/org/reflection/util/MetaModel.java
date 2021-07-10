@@ -9,17 +9,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-public class MetaModel<T> {
+public class MetaModel{
 
 
-    private final Class<T> clss;
+    private final Class<?> clss;
 
-    public static <T> MetaModel<T> of(Class<T> clss){
+    public static MetaModel of(Class<?> clss){
         return new MetaModel(clss);
     }
 
-    public MetaModel(Class<T> clss){
+    public MetaModel(Class<?> clss){
         this.clss = clss;
     }
 
@@ -52,5 +54,21 @@ public class MetaModel<T> {
             }
         }
         return columnFields;
+    }
+
+    public String buildInsertRequest() {
+        //insert into person (id, name, age) values (?, ?, ?)
+        String primaryKeyColumnName = getPrimaryKey().getName();
+        List<String> columnNames = getColumns().stream().map(ColumnField::getName).collect(Collectors.toList());
+
+
+        List<String> allNames = List.copyOf(columnNames);
+        allNames.add(0, primaryKeyColumnName);
+        //join elements in list using , as a separator
+        String tableFieldsPart = String.join(", ", allNames);
+        int numberOfTableFields = allNames.size();
+        String questionMarkPart = IntStream.range(0, numberOfTableFields).mapToObj(index -> "?").collect(Collectors.joining(", "));
+
+        return "insert into " + this.clss.getSimpleName() + " (" + tableFieldsPart + ") values (" + questionMarkPart + ")";
     }
 }

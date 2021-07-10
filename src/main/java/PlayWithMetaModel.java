@@ -8,7 +8,7 @@ import java.util.List;
 public class PlayWithMetaModel {
     public static void main(String[] args){
         //MetaModel class retrieves the primary keys and column fields of a given class
-        MetaModel<Person> metamodel = MetaModel.of(Person.class);
+        MetaModel metamodel = MetaModel.of(Person.class);
 
         PrimaryKeyField primaryKeyField = metamodel.getPrimaryKey();
         List<ColumnField> columnFields =  metamodel.getColumns();
