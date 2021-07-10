@@ -71,4 +71,19 @@ public class MetaModel{
 
         return "insert into " + this.clss.getSimpleName() + " (" + tableFieldsPart + ") values (" + questionMarkPart + ")";
     }
+
+    public String buildSelectRequest() {
+        //select id, name, age from Person where id = ?
+        String primaryKeyColumnName = getPrimaryKey().getName();
+        List<String> columnNames = getColumns().stream().map(ColumnField::getName).collect(Collectors.toList());
+
+
+        List<String> allNames = columnNames;
+        allNames.add(0, primaryKeyColumnName);
+        //join elements in list using , as a separator
+        String tableFieldsPart = String.join(", ", allNames);
+
+
+        return "SELECT " + tableFieldsPart + " FROM " + this.clss.getSimpleName() + " where " + getPrimaryKey().getName() + " ?";
+    }
 }

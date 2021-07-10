@@ -4,10 +4,8 @@ import org.reflection.util.ColumnField;
 import org.reflection.util.MetaModel;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class EntityManagerImplementation<T> implements EntityManager<T> {
@@ -19,6 +17,57 @@ public class EntityManagerImplementation<T> implements EntityManager<T> {
         String sql = metaModel.buildInsertRequest();
         PreparedStatement statement = prepareStatementWith(sql).andParameters(t);
         statement.executeUpdate();
+    }
+
+    @Override
+    public T find(Class<T> clss, Object primaryKey) throws SQLException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        MetaModel metamodel = MetaModel.of(clss);
+        String sql = metamodel.buildSelectRequest();
+        PreparedStatement statement = prepareStatementWith(sql).andPrimaryKey(primaryKey);
+        ResultSet resultSet = statement.executeQuery();
+
+        return buildInstanceFrom(clss, resultSet);
+    }
+
+    private T buildInstanceFrom(Class<T> clss, ResultSet resultSet) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, SQLException {
+        MetaModel metamodel = MetaModel.of(clss);
+
+        //create a new instance of the class
+        T t = clss.getConstructor().newInstance();
+
+        //set primary key of object
+        Field primary = metamodel.getPrimaryKey().getField();
+        String primaryKeyColumnName = metamodel.getPrimaryKey().getName();
+        Class<?> primaryKeyType = metamodel.getPrimaryKey().getType();
+
+
+        resultSet.next();
+
+        if(primaryKeyType == long.class){
+            long primaryKey = resultSet.getInt(primaryKeyColumnName);
+            primary.setAccessible(true);
+            primary.set(t, primaryKey);
+        }
+
+        for(ColumnField columnField: metamodel.getColumns()){
+            Field field = columnField.getField();
+            field.setAccessible(true);
+
+            Class<?> columnType = columnField.getType();
+            String columnName = columnField.getName();
+
+            if(columnType == int.class){
+                int value = resultSet.getInt(columnName);
+                field.set(t, value);
+            } else if (columnType == String.class){
+                String value = resultSet.getString(columnName);
+                field.set(t, value);
+            }
+        }
+
+        return t;
+
+
     }
 
     private PreparedStatementWrapper prepareStatementWith(String sql) throws SQLException {
@@ -71,6 +120,13 @@ public class EntityManagerImplementation<T> implements EntityManager<T> {
                 } else if(fieldType == String.class){
                     statement.setString(columnIndex + 2, (String) value);
                 }
+            }
+            return statement;
+        }
+
+        public PreparedStatement andPrimaryKey(Object primaryKey) throws SQLException {
+            if (primaryKey.getClass() == Long.class){
+                statement.setLong(1, (Long) primaryKey);
             }
             return statement;
         }
